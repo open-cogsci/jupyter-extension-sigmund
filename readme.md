@@ -2,7 +2,7 @@
 
 __Disclaimer: This is an early development preview__
 
-This is an extension for Jupyterlab, Jupyter Notebook, Spyder, Rapunzel, or any other application that uses a Jupyter/ IPython based console. It allows you to connect your Python session to [SigmundAI](https://sigmundai.eu). This is mainly intended as a tool for coding and data analysis.
+This is an extension for Jupyterlab, Jupyter Notebook, Spyder, Rapunzel, or any other application that uses a Jupyter/ IPython based console. It allows you to connect your Python session to [SigmundAI](https://sigmundai.eu). This is mainly intended as a tool for AI-assisted coding and data analysis.
 
 __IMPORTANT__: By connecting your Python session to Sigmund, you give an artificial intelligence (AI) full access to your file system. You are fully responsible for all of the actions that the AI performs, including accidental file deletions. AI is a powerful tool. Use it responsibly and carefully.
 

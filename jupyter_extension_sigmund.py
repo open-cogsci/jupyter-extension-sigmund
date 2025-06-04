@@ -18,10 +18,10 @@ import time
 
 
 logger = logging.getLogger(__name__)
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 STARTUP_DELAY = 5  # seconds
 SIGMUND_INSTRUCTIONS = "I connected you to Jupyter. Any code that you put in the workspace will now automatically be executed, and then I will send you the output back. Please confirm that you understand how to execute code now? (But don't actually execute any code yet!"
-EXTENSION_LOADED_MESSAGE = '''SigmundAI extension for Jupyter loaded. To connect to Sigmund, run %start_listening.
+EXTENSION_LOADED_MESSAGE = f'''SigmundAI extension for Jupyter loaded (v{__version__}). To connect to Sigmund, run %start_listening.
 
 IMPORTANT: By connecting your Python session to Sigmund, you give an artificial intelligence (AI) full access to your file system. You are fully responsible for all of the actions that the AI performs, including accidental file deletions. AI is a powerful tool. Use it responsibly and carefully.
 '''
@@ -133,6 +133,10 @@ class WebSocketBridge(Magics):
         action = data.get('action')
         on_connect = data.get('on_connect', False)
         workspace_content = data.get('workspace_content', '')
+        workspace_language = data.get('workspace_language', 'python')
+        # We can only execute Python code
+        if workspace_language != 'python':
+            return
         # Only process ai_message with content and not on_connect
         if action == 'ai_message' and workspace_content and not on_connect:
             await self.execute_and_respond(data, websocket)
