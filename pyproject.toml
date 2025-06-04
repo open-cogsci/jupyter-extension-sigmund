@@ -1,0 +1,19 @@
+[build-system]
+requires = ["flit_core >=3.4"]
+build-backend = "flit_core.buildapi"
+[project]
+name = "jupyter-extension-sigmund"
+authors = [
+    {name = "Sebastiaan Mathôt", email = "s.mathot@cogsci.nl"}
+]
+readme = "readme.md"
+license = {file = "COPYING"}
+requires-python = ">=3.8"
+dynamic = ["version", "description"]
+dependencies = [
+    "websockets"
+]
+keywords = ["data analysis", "artifical intelligence", "jupyter", "ipython"]
+[project.urls]
+Documentation = "https://sigmundai.eu"
+Source = "https://github.com/open-cogsci/jupyter-extension-sigmund"
