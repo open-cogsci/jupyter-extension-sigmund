@@ -13,10 +13,16 @@ __IMPORTANT__: By connecting your Python session to Sigmund, you give an artific
 pip install jupyter-extension-sigmund
 ```
 
+This extension will be updated often. Please make sure to update it regularly!
+
+```
+pip install jupyter-extension-sigmund --upgrade
+```
+
 
 ## Usage
 
-First load the extension with a magic command:
+First load the extension with a magic command. This will work in any console that is based on Jupyter/IPython, including Jupyterlab, Jupyter Notebook, Spyder, and Rapunzel.
 
 ```
 %load_ext jupyter_extension_sigmund
