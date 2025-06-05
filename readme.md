@@ -6,6 +6,7 @@ This is an extension for Jupyterlab, Jupyter Notebook, Spyder, Rapunzel, or any 
 
 __IMPORTANT__: By connecting your Python session to Sigmund, you give an artificial intelligence (AI) full access to your file system. You are fully responsible for all of the actions that the AI performs, including accidental file deletions. AI is a powerful tool. Use it responsibly and carefully.
 
+[output2.webm](https://github.com/user-attachments/assets/905233c3-5980-45f5-b8fb-dc769b4c3526)
 
 ## Installation
 
