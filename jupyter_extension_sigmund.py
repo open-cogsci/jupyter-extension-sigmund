@@ -6,6 +6,7 @@ import asyncio
 import websockets
 import json
 import sys
+import random
 import re
 from IPython.core.magic import Magics, magics_class, line_magic
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
@@ -18,9 +19,27 @@ import time
 
 
 logger = logging.getLogger(__name__)
-__version__ = '0.1.1'
+__version__ = '0.1.2'
+ARTISTS = [
+    'Jacques Brel',
+    'Jay-Z',
+    'Madonna',
+    'Stromae',
+    'André Hazes',
+    'IAM',
+    'The Notorious B.I.G.',
+    'Kanye West',
+    'Bob Dylan',
+    'Rick Ross',
+    'Stevie Wonder',
+    'N.W.A.'
+]
 STARTUP_DELAY = 5  # seconds
-SIGMUND_INSTRUCTIONS = "I connected you to Jupyter. Any code that you put in the workspace will now automatically be executed, and then I will send you the output back. Please confirm that you understand how to execute code now? (But don't actually execute any code yet!"
+SIGMUND_INSTRUCTIONS = """I connected you to Jupyter. Any code that you put in the workspace will now automatically be executed, and I will send you the output back in my reply.
+
+To make sure that you understand how to execute code now, write a simple Python script that prints out your favorite quote from {}. Once you receive the output back from me, summarize in your own words how you can execute code, and then stop.
+
+Ready? Go!"""
 EXTENSION_LOADED_MESSAGE = f'''SigmundAI extension for Jupyter loaded (v{__version__}). To connect to Sigmund, run %start_listening.
 
 IMPORTANT: By connecting your Python session to Sigmund, you give an artificial intelligence (AI) full access to your file system. You are fully responsible for all of the actions that the AI performs, including accidental file deletions. AI is a powerful tool. Use it responsibly and carefully.
@@ -88,10 +107,7 @@ class WebSocketBridge(Magics):
         
         self.clients.add(websocket)
         print(CLIENT_CONNECTED_MESSAGE)
-        
-        # Send response according to protocol
-        response = {"action": "disable_code_execution"}
-        await websocket.send(json.dumps(response))
+    
         # Send response according to protocol
         response = {
             "action": "connector_name",
@@ -102,7 +118,7 @@ class WebSocketBridge(Magics):
         # Send response according to protocol
         response = {
             "action": "user_message",
-            "message": SIGMUND_INSTRUCTIONS,
+            "message": SIGMUND_INSTRUCTIONS.format(random.choice(ARTISTS)),
             "workspace_content": "",
             "workspace_language": ""
         }
@@ -143,6 +159,11 @@ class WebSocketBridge(Magics):
     
     async def execute_and_respond(self, data, websocket):
         """Execute code and send response according to protocol"""
+        # First make sure that the code execution tool is disabled, because it
+        # may confuse Sigmund if there are two ways to execute code
+        response = {"action": "disable_code_execution"}
+        await websocket.send(json.dumps(response))
+ 
         code = data.get('workspace_content', '')
         message = data.get('message')
         display(HTML(message))
