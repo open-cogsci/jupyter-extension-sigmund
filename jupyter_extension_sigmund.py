@@ -40,12 +40,16 @@ SIGMUND_INSTRUCTIONS = """I connected you to Jupyter. Any code that you put in t
 To make sure that you understand how to execute code now, write a simple Python script that prints out your favorite quote from {}. Once you receive the output back from me, summarize in your own words how you can execute code, and then stop.
 
 Ready? Go!"""
-EXTENSION_LOADED_MESSAGE = f'''SigmundAI extension for Jupyter loaded (v{__version__}). To connect to Sigmund, run %start_listening.
+EXTENSION_LOADED_MESSAGE = f'''SigmundAI extension for Jupyter loaded (v{__version__})
+
+- To connect to a new conversation, run %start_listening
+- To resume a previous conversation, run %resume_listening
 
 IMPORTANT: By connecting your Python session to Sigmund, you give an artificial intelligence (AI) full access to your file system. You are fully responsible for all of the actions that the AI performs, including accidental file deletions. AI is a powerful tool. Use it responsibly and carefully.
 '''
 STOPPED_LISTENING_MESSAGE = 'Stopped listening. To connect to Sigmund, run %start_listening.'
 STARTED_LISTENING_MESSAGE = 'Started listening. Open https://sigmundai.eu in a browser and log in. You will automatically connect once the browser tab is loaded.'
+RESUMED_LISTENING_MESSAGE = 'Resumed listening. Open https://sigmundai.eu in a browser and log in. You will automatically connect once the browser tab is loaded.'
 CLIENT_CONNECTED_MESSAGE = 'Connected to SigmundAI. To disconnect, run %stop_listening.'
 # Allowed origins/domains
 ALLOWED_ORIGINS = {
@@ -68,6 +72,7 @@ class WebSocketBridge(Magics):
         self.loop = None
         self.is_running = False
         self.is_notebook = self._detect_notebook()
+        self._send_instructions = None  # set during resume or start listening
         
     def _detect_notebook(self):
         """Detect if we're running in Jupyter notebook/lab vs QtConsole/IPython"""
@@ -116,14 +121,15 @@ class WebSocketBridge(Magics):
         await websocket.send(json.dumps(response))
                
         # Send response according to protocol
-        response = {
-            "action": "user_message",
-            "message": SIGMUND_INSTRUCTIONS.format(random.choice(ARTISTS)),
-            "workspace_content": "",
-            "workspace_language": ""
-        }
-        
-        await websocket.send(json.dumps(response))        
+        if self._send_instructions:
+            response = {
+                "action": "user_message",
+                "message": SIGMUND_INSTRUCTIONS.format(random.choice(ARTISTS)),
+                "workspace_content": "",
+                "workspace_language": ""
+            }        
+            await websocket.send(json.dumps(response))
+            
         try:
             async for message in websocket:
                 try:
@@ -291,32 +297,19 @@ class WebSocketBridge(Magics):
             response["attachments"] = attachments
         
         await websocket.send(json.dumps(response))
-    
-    @line_magic
-    @magic_arguments()
-    @argument('--port', type=int, default=8080, help='WebSocket server port (default: 8080)')
-    @argument('--host', default='localhost', help='WebSocket server host')
-    @argument('--verbose', action='store_true', help='Enable verbose logging')
-    def start_listening(self, line):
-        """Start the WebSocket bridge server"""
-        print(STARTED_LISTENING_MESSAGE)
-        args = parse_argstring(self.start_listening, line)
         
+    def _start_server(self, host, port, send_instructions):        
         if self.is_running:            
             return
-            
+        self._send_instructions = send_instructions
         # Start the WebSocket server in a separate thread
         def run_server():
             self.loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self.loop)
             async def start_server_async():
                 self.server = await websockets.serve(
-                    self.handle_client, 
-                    args.host, 
-                    args.port,
-                    ping_interval=20,
-                    ping_timeout=10
-                )
+                    self.handle_client, host, port, ping_interval=20,
+                    ping_timeout=10)
                 self.is_running = True                
                 # Keep server running
                 await self.server.wait_closed()
@@ -332,13 +325,30 @@ class WebSocketBridge(Magics):
         
         # Give the server a moment to start
         time.sleep(STARTUP_DELAY)
-
+    
+    @line_magic
+    @magic_arguments()
+    @argument('--port', type=int, default=8080, help='WebSocket server port (default: 8080)')
+    @argument('--host', default='localhost', help='WebSocket server host')
+    def start_listening(self, line):
+        """Start the WebSocket bridge server"""
+        print(STARTED_LISTENING_MESSAGE)
+        args = parse_argstring(self.start_listening, line)
+        self._start_server(args.host, args.port, send_instructions=True)
+        
+    @line_magic
+    @magic_arguments()
+    @argument('--port', type=int, default=8080, help='WebSocket server port (default: 8080)')
+    @argument('--host', default='localhost', help='WebSocket server host')
+    def resume_listening(self, line):
+        """Start the WebSocket bridge server"""
+        print(RESUMED_LISTENING_MESSAGE)
+        args = parse_argstring(self.start_listening, line)
+        self._start_server(args.host, args.port, send_instructions=False)
     
     @line_magic
     def stop_listening(self, line):
         """Stop the WebSocket bridge server"""
-        # if self.loop and self.server:
-            # asyncio.run_coroutine_threadsafe(self.server.close(), self.loop)
         self.server.close()
         self.is_running = False
         self.server = None
@@ -351,11 +361,10 @@ _bridge_instance = None
 def load_ipython_extension(ipython):
     """Load the extension"""
     global _bridge_instance
-    _bridge_instance = WebSocketBridge(ipython)
-    
+    _bridge_instance = WebSocketBridge(ipython)    
     ipython.register_magic_function(_bridge_instance.start_listening)
-    ipython.register_magic_function(_bridge_instance.stop_listening)
-    
+    ipython.register_magic_function(_bridge_instance.resume_listening)
+    ipython.register_magic_function(_bridge_instance.stop_listening)    
     print(EXTENSION_LOADED_MESSAGE)
 
 
