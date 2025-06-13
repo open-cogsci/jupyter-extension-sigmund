@@ -8,6 +8,7 @@ __IMPORTANT__: By connecting your Python session to Sigmund, you give an artific
 
 [output2.webm](https://github.com/user-attachments/assets/905233c3-5980-45f5-b8fb-dc769b4c3526)
 
+
 ## Installation
 
 ```
@@ -29,13 +30,19 @@ First load the extension with a magic command. This will work in any console tha
 %load_ext jupyter_extension_sigmund
 ```
 
-Next, start listening for Sigmund with another magic command:
+Next, start a new conversation with Sigmund with another magic command:
 
 ```
 %start_listening
 ```
 
 Once the extension is listening, all you need to do is open https://sigmundai.eu in a browser. A connection will then automatically be established.
+
+If you want to resume a previous conversation, you can use yet another magic command: (The only difference is that this will not resend instructions to Sigmund.))
+
+```
+%resume_listening
+```
 
 
 ## License
