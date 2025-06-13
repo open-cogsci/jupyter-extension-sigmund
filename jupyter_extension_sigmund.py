@@ -19,7 +19,7 @@ import time
 
 
 logger = logging.getLogger(__name__)
-__version__ = '0.1.2'
+__version__ = '0.2.0'
 ARTISTS = [
     'Jacques Brel',
     'Jay-Z',
@@ -35,7 +35,7 @@ ARTISTS = [
     'N.W.A.'
 ]
 STARTUP_DELAY = 5  # seconds
-SIGMUND_INSTRUCTIONS = """I connected you to Jupyter. Any code that you put in the workspace will now automatically be executed, and I will send you the output back in my reply.
+SIGMUND_INSTRUCTIONS = """I connected you to Jupyter. Any Python code that you put in the workspace will now automatically be executed, and I will send you the output back in my reply.
 
 To make sure that you understand how to execute code now, write a simple Python script that prints out your favorite quote from {}. Once you receive the output back from me, summarize in your own words how you can execute code, and then stop.
 
@@ -73,6 +73,7 @@ class WebSocketBridge(Magics):
         self.is_running = False
         self.is_notebook = self._detect_notebook()
         self._send_instructions = None  # set during resume or start listening
+        self._previous_workspace_content = None
         
     def _detect_notebook(self):
         """Detect if we're running in Jupyter notebook/lab vs QtConsole/IPython"""
@@ -156,12 +157,26 @@ class WebSocketBridge(Magics):
         on_connect = data.get('on_connect', False)
         workspace_content = data.get('workspace_content', '')
         workspace_language = data.get('workspace_language', 'python')
-        # We can only execute Python code
-        if workspace_language != 'python':
+        if action != 'ai_message':
             return
-        # Only process ai_message with content and not on_connect
-        if action == 'ai_message' and workspace_content and not on_connect:
-            await self.execute_and_respond(data, websocket)
+        if not workspace_content:
+            return
+        # We can only execute Python code for now
+        if workspace_language != 'python':
+            print('Can only execute Python code')
+            return
+        # During connection, we receive a lot of messages at once. These
+        # should not trigger execution
+        if on_connect:
+            return
+        # If we receive the same content twice in a row, that's probably because
+        # the AI forgot to clear the workspace, and we should not execute it.
+        workspace_content = workspace_content.strip()
+        if workspace_content == self._previous_workspace_content:
+            print('Already executed this code')
+            return
+        self._previous_workspace_content = workspace_content
+        await self.execute_and_respond(data, websocket)
     
     async def execute_and_respond(self, data, websocket):
         """Execute code and send response according to protocol"""
