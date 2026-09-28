@@ -41,7 +41,7 @@ from IPython.display import HTML, Markdown, display
 
 
 logger = logging.getLogger(__name__)
-__version__ = '0.4.1'
+__version__ = '0.4.2'
 
 
 def enable_logging(level=logging.INFO):

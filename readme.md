@@ -16,7 +16,7 @@ pip install jupyter-extension-sigmund --upgrade
 
 ## Example
 
-See <a href="https://github.com/open-cogsci/jupyter-extension-sigmund/blob/master/jupyter_extension_sigmund.py">Example Notebook</a>.
+See <a href="https://github.com/open-cogsci/jupyter-extension-sigmund/blob/master/example.ipynb">Example Notebook</a>.
 
 
 ## Usage
