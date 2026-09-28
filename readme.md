@@ -16,7 +16,7 @@ pip install jupyter-extension-sigmund --upgrade
 
 ## Example
 
-See <example.ipynb>.
+See <./example.ipynb>.
 
 
 ## Usage
